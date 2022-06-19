@@ -3,6 +3,8 @@ let i = 0;
 let j = 0;
 let lines = 500;
 let store = [];
+let checkForFinish = [];
+let retart = false;
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
@@ -28,11 +30,8 @@ function handleButton() {
   run = false;
   noLoop();
 
-  values.length = 0;
-  init();
+  doRestart();
 
-  first = true;
-  count = 0;
   run = true;
 
   loop();
@@ -60,7 +59,11 @@ function draw() {
         first = false;
       }
     } else {
+      restart = true;
       sortCircle();
+      if (restart) {
+        doRestart();
+      }
     }
   }
 }
@@ -95,7 +98,7 @@ function getXY(deg) {
   return [x, y];
 }
 
-function init() {
+function doInit() {
   let last = [255, 0, 0];
   let delta = (255 * 3) / lines;
 
@@ -121,15 +124,25 @@ function init() {
   }
 
   store = [...values];
+  checkForFinish = [...values];
 }
 
 function sortCircle() {
   for (let i = 0; i < values.length - 1; i++) {
     let hold = values[i];
 
-    if (values[i + 1][1] > values[i][1]) {
+    if (values[i + 1][1] < values[i][1]) {
       values[i] = values[i + 1];
       values[i + 1] = hold;
+      restart = false;
     }
   }
+}
+
+function doRestart() {
+  values.length = 0;
+  doInit();
+
+  first = true;
+  count = 0;
 }
