@@ -1,13 +1,41 @@
 const values = [];
 let i = 0;
 let j = 0;
-let lines = 1000;
+let lines = 500;
 let store = [];
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
 
+  let inp = createInput('500');
+  inp.position(0, height * 0.05);
+  inp.size(100);
+  inp.input(handleTextInput);
+
+  let button = createButton('Start');
+  button.position(100, height * 0.05);
+  button.mousePressed(handleButton);
+
+  noLoop();
+}
+
+function handleTextInput() {
+  lines = parseFloat(this.value());
+}
+
+let run = false;
+function handleButton() {
+  run = false;
+  noLoop();
+
+  values.length = 0;
   init();
+
+  first = true;
+  count = 0;
+  run = true;
+
+  loop();
 }
 
 let first = true;
@@ -15,20 +43,25 @@ let count = 0;
 function draw() {
   drawBackground();
 
-  drawCircle(lines);
+  fill(255);
+  text('How many lines?', 0, height * 0.02)
 
-  if (first) {
-    let val = random(store);
-    values[count] = val;
-    store.splice(store.indexOf(val), 1);
+  if (run) {
+    drawCircle(lines);
 
-    count += 1;
+    if (first) {
+      let val = random(store);
+      values[count] = val;
+      store.splice(store.indexOf(val), 1);
 
-    if (count === values.length) {
-      first = false;
+      count += 1;
+
+      if (count === values.length) {
+        first = false;
+      }
+    } else {
+      sortCircle();
     }
-  } else {
-    sortCircle();
   }
 }
 
