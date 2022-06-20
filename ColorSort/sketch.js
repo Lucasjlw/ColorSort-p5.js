@@ -10,22 +10,46 @@ let lines = 500;
 // This flag is used to check if the sort is finished.
 let retart = false;
 
+// This flag is used to keep track of which sort the user
+// has chosen in the dropdown
+let chosenSort = 0
+
 function setup() {
   createCanvas(windowWidth, windowHeight);
 
   // Create a text input at the top-left of the screen to ask for lines.
   let inp = createInput('500');
-  inp.position(0, height * 0.05);
+  inp.position(0, height * 0.03);
   inp.size(100);
   inp.input(handleTextInput);
 
   // Create a button that starts the sorting loop.
   let button = createButton('Start');
-  button.position(100, height * 0.05);
+  button.position(100, height * 0.03);
   button.mousePressed(handleButton);
+
+  // Create a select box so the user can pick which sort to run
+  sel = createSelect();
+  sel.position(0, height * 0.1);
+  sel.option('Bubble Sort');
+  sel.option('Radix Sort');
+  sel.changed(handleDropdown);
 
   // We don't want draw() to loop until after the button is pressed.
   noLoop();
+}
+
+// This is how we deal with the user changing sort funcions
+function handleDropdown() {
+  if (sel.value() === 'Bubble Sort') {
+    chosenSort = 0;
+  }
+
+  else if (sel.value() === 'Radix Sort') {
+    chosenSort = 1;
+  }
+
+  doRestart();
 }
 
 // Just set the lines variable to the user provided input.
@@ -63,7 +87,10 @@ function draw() {
   drawBackground();
 
   fill(255);
-  text('How many lines?', 0, height * 0.02)
+
+
+  text('How many lines?', 0, height * 0.02);
+  text('What sort to use?', 0, height * 0.09);
 
   // If the start button has been pressed.
   if (run) {
@@ -89,18 +116,20 @@ function draw() {
         first = false;
       }
     } else {
-      // Restart is set to true here. If it is set to false inside of the sortCircle()
-      // Function, then we know the sort is done.
-      restart = true;
+      
+      if (chosenSort === 0) {
+        bubbleSort();
+      }
 
-      sortCircle();
-
-      // Restart from the beginning if restart is still true.
-      // This is like pressing the Start button.
-      if (restart) {
-        doRestart();
+      else if (chosenSort === 1) {
+        radixSort();
       }
     }
+  } 
+  
+  // Get a circle so the screen isn't just black before the user presses Start.
+  else {
+    drawCircle(lines);
   }
 }
 
@@ -166,7 +195,7 @@ function doInit() {
   // Same as the other for loop. It goes through all of the angles each line should be.
   for (let i = 0; i < 360; i += 360 / lines) {
     // Insert the color and the angle for each line into the values array.
-    values.push([last, i]);
+    values.push([last, Math.floor(i)]);
 
     // If we are going from red to green then "first" is going to be true.
     if (first) {
@@ -203,8 +232,11 @@ function doInit() {
   store = [...values];
 }
 
-// This is the sorting function.
-function sortCircle() {
+// This is the bubble sorting function.
+function bubbleSort() {
+  // This is a flag used to check when we need to restart.
+  let restart = true;
+
   // For each of  the lines we created inside of doInit()
   for (let i = 0; i < values.length - 1; i++) {
 
@@ -221,6 +253,51 @@ function sortCircle() {
       restart = false;
     }
   }
+
+  if (restart) {
+    doRestart();
+  }
+}
+
+// This is the sorting function. Compares the value of the digit in each "place" (ones place, tens place, etc.)
+// After sorting based on one "place" (radix) it will move on to the next radix.
+function radixSort() {
+  // We will use this as a flag. See below.
+  nextRadix = true;
+
+  // We loop through each value and compare them based
+  // on current radix. 
+  for (let i = 0; i < values.length - 1; i++) {
+    // These two variables will grab the value of the digit in the current "place"
+    // E.g. if radix = 0, we are grabbing the ones place. If radix = 1, we are getting the 10s place.
+    let val1 = Math.floor((values[i][1] / 10 ** radix) % 10);
+    let val2 = Math.floor((values[i + 1][1] / 10 ** radix) % 10);
+
+    // This is just a store.
+    let hold = values[i];
+
+    // If the value in the current "place" is greater than in the next line, swap the two lines so the lower
+    // value comes first.
+    if (val1 > val2) {
+      values[i] = values[i + 1];
+      values[i + 1] = hold;
+
+      // Since we did a swap, it means we are still using this radix to sort with.
+      nextRadix = false;
+    }
+  }
+
+  // If we didn't swap in the for loop,
+  // we are done sorting with this radix.
+  if (nextRadix) {
+    radix += 1;
+  }
+
+  // None of our values have more than 4 digits, so if
+  // the radix is greater than 4, we restart.
+  if (radix > 4) {
+    doRestart();
+  }
 }
 
 // This is the restart function
@@ -234,4 +311,5 @@ function doRestart() {
   // Set out flags to before we ran the sorting loop.
   first = true;
   count = 0;
+  radix = 0;
 }
